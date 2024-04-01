@@ -26,6 +26,44 @@ class Preprocessor:
         return ret
     
 
+# class RegParser:
+
+
 if __name__ == '__main__':
-    print(Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]"))
-        
+    # text = Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]")
+    text = Preprocessor.preprocess("a(b?|c)")
+    q = Queue()
+    st = []
+    sz = len(text)
+    for i in range(sz):
+        # case 1: alphabet, digit, dot
+        if text[i].isalpha() or text[i].isdigit() or text[i]=='.':
+            q.put(text[i])
+        # case 2: unary operators
+        elif text[i] in unary_operators:
+            st.append(text[i])
+        # case 3: binary operators
+        elif text[i] in binary_operators:
+            while len(st)>0 and st[-1] in unary_operators:
+                q.put(st.pop())
+            st.append(text[i])
+        # case 4: opening brackets
+        elif text[i] in opening_brackets:
+            st.append(text[i])
+        # case 5: closing brackets
+        elif text[i] in closing_brackets:
+            opening = '(' if text[i] == ')' else '['
+            while len(st)>0 and st[-1] != opening:
+                q.put(st.pop())
+            if len(st)==0:
+                raise Exception("Invalid Regular Expression")
+            st.pop()
+    while(len(st)>0):
+        if(st[-1] in opening_brackets):
+            raise Exception("Invalid Regular Expression")
+        else:
+            q.put(st[-1])
+        st.pop()
+    while(q.qsize()>0):
+        print(q.get())
+    
