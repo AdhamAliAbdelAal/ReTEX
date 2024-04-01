@@ -18,6 +18,21 @@ class Operator:
         else:
             # brackets
             return None
+        
+
+class Transition:
+    pass
+
+class State:
+    def __init__(self, is_accepting: bool = False, transitions: list[Transition] = []):
+        self.is_terminating = is_accepting
+        self.transitions = transitions
+
+    
+class Transition:
+    def __init__(self, input: str, to: State):
+        self.to = to
+        self.input = input
 
 unary_operators = ['*', '+', '?']
 binary_operators = ['|', '&', '-']
@@ -41,44 +56,113 @@ class Preprocessor:
         ret+=text[sz-1]
         return ret
     
+class FA:
+    def __init__(self) -> None:
+        self.start = None
+        self.end = None
 
-# class RegParser:
+    def add_operand_FA(self, operand: str ,states: list[State]):
+        self.start = State()
+        self.end = State()
+        if operand == '.':
+            # for all digits and alphabets
+            for i in range(26):
+                if i<10:
+                    transition = Transition(chr(ord('0')+i), self.end)
+                    self.start.transitions.append(transition)
+                transition = Transition(chr(ord('a')+i), self.end)
+                self.start.transitions.append(transition)
+                transition = Transition(chr(ord('A')+i), self.end)
+                self.start.transitions.append(transition)
+        else:
+            transition = Transition(operand, self.end)
+            self.start.transitions.append(transition)
+    
+    def add_operator_FA(self, operator: str, states: list[State]):
+        if operator == '|':
+            pass
+        elif operator == '&':
+            pass
+        elif operator == '-':
+            pass
+        elif operator == '*':
+            pass
+        elif operator == '+':
+            pass
+        elif operator == '?':
+            pass
+
+class RegParser:
+    def __init__(self, text):
+        self.text = Preprocessor.preprocess(text)
+        self.build()
+        self.states = []
+    
+    def build(self):
+        q = []
+        text = self.text
+        st = []
+        sz = len(text)
+        for i in range(sz):
+            # case 1: alphabet, digit, dot
+            if text[i].isalpha() or text[i].isdigit() or text[i]=='.':
+                q.append(text[i])
+            # case 2: operators
+            elif Operator.precedence(text[i]) is not None:
+                while len(st)>0 and Operator.precedence(st[-1]) is not None and Operator.precedence(st[-1]) <= Operator.precedence(text[i]):
+                    q.append(st.pop())
+                st.append(text[i])
+            # case 3: opening brackets
+            elif text[i] in opening_brackets:
+                st.append(text[i])
+            # case 4: closing brackets
+            elif text[i] in closing_brackets:
+                opening = '(' if text[i] == ')' else '['
+                while len(st)>0 and st[-1] != opening:
+                    q.append(st.pop())
+                if len(st)==0:
+                    raise Exception("Invalid Regular Expression")
+                st.pop()
+        while(len(st)>0):
+            if(st[-1] in opening_brackets):
+                raise Exception("Invalid Regular Expression")
+            else:
+                q.append(st[-1])
+            st.pop()
+        self.q = q
+
+    @staticmethod
+    def is_operand(c):
+        return c.isalpha() or c.isdigit() or c == '.'
+        
+    def parse(self):
+        sz = len(self.q)
+        for i in range(sz):
+            if not RegParser.is_operand(self.q[i]):
+                if self.q[i] == '|':
+                    pass
+                elif self.q[i] == '&':
+                    pass
+                elif self.q[i] == '-':
+                    pass
+                elif self.q[i] == '*':
+                    pass
+                elif self.q[i] == '+':
+                    pass
+                elif self.q[i] == '?':
+                    pass
+                else:
+                    pass
+
+
 
 
 if __name__ == '__main__':
-    text = Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]")
+    # text = Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]")
     # text = Preprocessor.preprocess("[a-zA-Z]")
     # text = Preprocessor.preprocess("a(b?|c)")
-    print(text)
-    q = Queue()
-    st = []
-    sz = len(text)
-    for i in range(sz):
-        # case 1: alphabet, digit, dot
-        if text[i].isalpha() or text[i].isdigit() or text[i]=='.':
-            q.put(text[i])
-        # case 2: operators
-        elif Operator.precedence(text[i]) is not None:
-            while len(st)>0 and Operator.precedence(st[-1]) is not None and Operator.precedence(st[-1]) <= Operator.precedence(text[i]):
-                q.put(st.pop())
-            st.append(text[i])
-        # case 3: opening brackets
-        elif text[i] in opening_brackets:
-            st.append(text[i])
-        # case 4: closing brackets
-        elif text[i] in closing_brackets:
-            opening = '(' if text[i] == ')' else '['
-            while len(st)>0 and st[-1] != opening:
-                q.put(st.pop())
-            if len(st)==0:
-                raise Exception("Invalid Regular Expression")
-            st.pop()
-    while(len(st)>0):
-        if(st[-1] in opening_brackets):
-            raise Exception("Invalid Regular Expression")
-        else:
-            q.put(st[-1])
-        st.pop()
-    while(q.qsize()>0):
-        print(q.get())
+    # parser = RegParser("[a-zA-Z]").parse()
+    parser = RegParser("a(b?|c)").parse()
+    # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()
+    
     
