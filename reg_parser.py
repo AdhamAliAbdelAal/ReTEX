@@ -1,5 +1,24 @@
 from queue import Queue
 
+class Operator:
+    @staticmethod
+    def precedence(op):
+        if op == '|':
+            return 1
+        elif op == '&':
+            return 2
+        elif op == '-':
+            return 0
+        elif op == '*':
+            return 0
+        elif op == '+':
+            return 0
+        elif op == '?':
+            return 0
+        else:
+            # brackets
+            return None
+
 unary_operators = ['*', '+', '?']
 binary_operators = ['|', '&', '-']
 opening_brackets = ['(', '[']
@@ -16,11 +35,8 @@ class Preprocessor:
             ret+=text[i]
             square_brackets += (text[i] == '[')
             square_brackets -= (text[i] == ']')
-            if square_brackets>0:
-                i+=1
-                continue
             if not(text[i] in binary_operators or text[i] in opening_brackets or text[i+1] in binary_operators or text[i+1] in closing_brackets or text[i+1] in unary_operators):
-                ret+='&'
+                ret+='&' if square_brackets ==0 else '|'
             i+=1
         ret+=text[sz-1]
         return ret
@@ -30,8 +46,10 @@ class Preprocessor:
 
 
 if __name__ == '__main__':
-    # text = Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]")
-    text = Preprocessor.preprocess("a(b?|c)")
+    text = Preprocessor.preprocess("a((b?|c)(2*u))d*[a-zA-C]")
+    # text = Preprocessor.preprocess("[a-zA-Z]")
+    # text = Preprocessor.preprocess("a(b?|c)")
+    print(text)
     q = Queue()
     st = []
     sz = len(text)
@@ -39,18 +57,15 @@ if __name__ == '__main__':
         # case 1: alphabet, digit, dot
         if text[i].isalpha() or text[i].isdigit() or text[i]=='.':
             q.put(text[i])
-        # case 2: unary operators
-        elif text[i] in unary_operators:
-            st.append(text[i])
-        # case 3: binary operators
-        elif text[i] in binary_operators:
-            while len(st)>0 and st[-1] in unary_operators:
+        # case 2: operators
+        elif Operator.precedence(text[i]) is not None:
+            while len(st)>0 and Operator.precedence(st[-1]) is not None and Operator.precedence(st[-1]) <= Operator.precedence(text[i]):
                 q.put(st.pop())
             st.append(text[i])
-        # case 4: opening brackets
+        # case 3: opening brackets
         elif text[i] in opening_brackets:
             st.append(text[i])
-        # case 5: closing brackets
+        # case 4: closing brackets
         elif text[i] in closing_brackets:
             opening = '(' if text[i] == ')' else '['
             while len(st)>0 and st[-1] != opening:
