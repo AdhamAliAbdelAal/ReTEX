@@ -80,21 +80,61 @@ class AutomataMachine:
 
         self.states[state].transitions[input].append(next_state)
 
+    #
+# {
+#   "startingState": "S0",
+#   "S0": {
+#     "isTerminatingState": true,
+#     "0": "S0",
+#     "1": "S1"  ,
+#     "eps": ["S1"]
+# },
+#   "S1": {
+#     "isTerminatingState": false,
+#     "0": "S2",
+#     "1" : "S4"  ,
+#     "eps": ["S0"]
+#   }
+# }
+    def save_to_json(self, file):
+        with open(file, 'w') as f:
+            data = {'startingState': self.starting_state}
+            for k, v in self.states.items():
+                data[k] = {'isTerminatingState': v.is_terminating_state}
+                for kk, vv in v.transitions.items():
+                    data[k][kk] = vv[0] if len(vv) == 1 else vv
+
+                data[k] = dict(sorted(data[k].items(),))
+
+            json.dump(data, f, indent=4)
+
     def draw(self):
-        g = nx.MultiDiGraph(seed=42)
+        G = nx.MultiDiGraph()
         for state in self.states.values():
             # https://stackoverflow.com/questions/74082881/adding-icon-for-node-shape-using-networkx-and-pyvis-python
-            g.add_node(
+            G.add_node(
                 state.id, color='gray' if not state.id == self.starting_state else 'orange', shape='diamond' if state.is_terminating_state else 'circle'
             )
+
+            # merge common edges like if 2 edges like (s1,s2,"a") and (s1,s2,"b") are present, merge them to (s1,s2,"a,b")
+            merged_edges = {}
             for k, v in state.transitions.items():
                 for dest_state in v:
-                    g.add_edge(state.id, dest_state, label=k,
-                               color='red' if k == EPS else 'black', merge=False,)
+                    edge = (state.id, dest_state, k)
+                    if edge[:2] in merged_edges.keys():
+                        merged_edges[edge[:2]].append(edge[2])
+                    else:
+                        merged_edges[edge[:2]] = [edge[2]]
+
+            # finally add the merged edges to the graph
+            for k, v in merged_edges.items():
+                G.add_edge(k[0], k[1], label=','.join(
+                    v), color='gray' if k[1] != EPS else 'red')
 
         nt = net.Network(notebook=True, cdn_resources='remote', directed=True)
-        nt.show_buttons(filter_=['physics'])
-        nt.from_nx(g)
+        # nt.show_buttons(filter_=['physics'])
+        nt.set_edge_smooth('dynamic')
+        nt.from_nx(G)
         nt.repulsion(spring_strength=0.02)
         nt.toggle_physics(True)
         nt.show(f'{self.name}_FSM.html')
@@ -106,6 +146,17 @@ class AutomataMachine:
         # plt.show()
         # Drawing the graph
         # First obtain the node positions using one of the layouts
+
+        # pos = nx.circular_layout(G)
+        # fig, ax = plt.subplots()
+        # nx.draw_networkx_nodes(G, pos, ax=ax)
+        # nx.draw_networkx_labels(G, pos, ax=ax)
+        # nx.draw_networkx_edges(G, pos, ax=ax)
+        # nx.draw_networkx_edges(
+        #     G, pos, ax=ax,  connectionstyle=f'arc3, rad = {0.25}')
+
+        # # nx.draw_networkx_edge_labels(G, pos, ax=ax)
+        # fig.savefig(f'{self.name}_FSM.png', bbox_inches='tight', pad_inches=0)
 
 
 class dfa_generator:
@@ -186,6 +237,7 @@ class dfa_generator:
 
                 transitions[curr_id][t] = [
                     self.get_states_group_id(next_group_states)]
+
                 if self.get_states_group_id(next_group_states) not in states.keys():
                     q.append((next_group_states, next_group_Ts, next_is_terminal))
 
@@ -194,23 +246,105 @@ class dfa_generator:
             start_closure_states), transitions)
         return new_dfa
 
-    def minimize_dfa(self, dfa):
-        """
-        Minimizes a DFA
-        """
-        pass
+
+class DFA_Minimizer:
+
+    def __init__(self, dfa: AutomataMachine):
+        self.dfa = dfa
+        # we begin by splitting the states into 2 groups, the terminating states and the non-terminating states
+        self.list_of_groups: list[set] = [
+            {state for state in dfa.states.keys(
+            ) if not dfa.is_terminating_state(state)},
+            {state for state in dfa.states.keys() if dfa.is_terminating_state(state)}
+        ]
+
+    def get_group(self, state: str, list_of_groups: list[set] = None) -> int:
+        # if not a local list of groups then use the global one
+        if not list_of_groups:
+            list_of_groups = self.list_of_groups
+
+        for i, g in enumerate(list_of_groups):
+            if state in g:
+                return i
+
+        return -1
+
+    def minimize(self):
+        # we will keep merging the groups until no more merges can be done
+        while True:
+            new_groups = []
+            for group in self.list_of_groups:
+                # if the group has only 1 element, we can't split it any further
+                if len(group) == 1:
+                    new_groups.append(group)
+                    continue
+
+                # we will split the group into subgroups
+                subgroups = {}
+                for state in group:
+                    # get the transitions of the state
+                    transitions = self.dfa.states[state].transitions
+
+                    state_transitions_to_go_groups = tuple(
+                        sorted([(k, self.get_group(v[0])) for k, v in transitions.items()]))
+                    if state_transitions_to_go_groups not in subgroups.keys():
+                        subgroups[state_transitions_to_go_groups] = set()
+
+                    subgroups[state_transitions_to_go_groups].add(state)
+
+                # add the subgroups to the new groups
+                new_groups.extend(subgroups.values())
+
+            # if the new groups are the same as the old groups, we can't split anymore
+            if new_groups == self.list_of_groups:
+                break
+            self.list_of_groups = new_groups
+
+    def reconstruct_dfa(self) -> AutomataMachine:
+        # create a new dfa with the new groups
+        # get copy of the old dfa
+        old_states = self.dfa.states.copy()
+        old_starting_state = self.dfa.get_starting_state()
+        new_starting_state = None
+        new_dfa = AutomataMachine(name='Minimized DFA')
+        for i, group in enumerate(self.list_of_groups):
+            # we take the first node as a represintive for the group
+            # make it take all the transitions of all the states in the group
+            # mark as starting state if the old starting state is in the group
+            is_starting = old_starting_state in group
+            if is_starting:
+                new_starting_state = i
+            new_transitions = {}
+            is_terminal = False
+            for state in group:
+                s = old_states[state]
+                is_terminal = is_terminal or s.is_terminating_state
+                for k, v in s.transitions.items():
+                    # transitions should be one-to-one as we have a dfa here
+                    new_transitions[k] = [self.get_group(v[0])]
+
+            # add the new state to the new dfa
+            new_dfa.add_state(i, is_terminal, new_transitions)
+        new_dfa.starting_state = new_starting_state
+
+        return new_dfa
 
 
 if __name__ == "__main__":
     state_machine = AutomataMachine().init_from_file('r1.json')
-    print(state_machine.get_state('S1').transitions)
-    print(state_machine.is_terminating_state('S0'))
-    print(state_machine.get_next_state('S0', '1a'))
-    print(state_machine.get_next_state('S0', '1'))
-    print(state_machine.get_starting_state())
+    # print(state_machine.get_state('S1').transitions)
+    # print(state_machine.is_terminating_state('S0'))
+    # print(state_machine.get_next_state('S0', '1a'))
+    # print(state_machine.get_next_state('S0', '1'))
+    # print(state_machine.get_starting_state())
     state_machine.draw()
-    dfa = dfa_generator('r1.json')
-    aa = dfa.get_closure(dfa.nfa_sm.get_state('S2'))
-    new_dfa = dfa.convert_to_dfa()
+    dfa_gen = dfa_generator('r1.json')
+    # aa = dfa.get_closure(dfa.nfa_sm.get_state('S2'))
+    new_dfa = dfa_gen.convert_to_dfa()
     new_dfa.draw()
-    print(aa)
+    new_dfa.save_to_json('dfa.json')
+
+    minimizer = DFA_Minimizer(new_dfa)
+    minimizer.minimize()
+    minized_dfa = minimizer.reconstruct_dfa()
+    minized_dfa.draw()

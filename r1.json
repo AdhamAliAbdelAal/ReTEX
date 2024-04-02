@@ -2,7 +2,7 @@
 {  
   "startingState": "S0", 
   "S0": {  
-    "isTerminatingState": true,  
+    "isTerminatingState": false,
     "0": "S0",  
     "1": "S1"  ,
     "eps": ["S1"]  
@@ -14,13 +14,13 @@
     "eps": ["S0"] 
   },  
   "S2": {  
-    "isTerminatingState": false,  
+    "isTerminatingState": false,
     "0": "S1",  
     "1": "S2"  ,
     "eps": ["S3"]
   }  ,
   "S3": {  
-    "isTerminatingState": false,  
+    "isTerminatingState": true,  
     "0": "S1",  
     "1": "S2"  
   }  ,

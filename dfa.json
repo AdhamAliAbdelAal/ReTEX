@@ -1,0 +1,23 @@
+{
+    "startingState": "S0_S1",
+    "S0_S1": {
+        "0": "S0_S1_S2_S3",
+        "1": "S0_S1_S4",
+        "isTerminatingState": false
+    },
+    "S0_S1_S4": {
+        "0": "S0_S1_S2_S3",
+        "1": "S0_S1_S4",
+        "isTerminatingState": false
+    },
+    "S0_S1_S2_S3": {
+        "0": "S0_S1_S2_S3",
+        "1": "S0_S1_S2_S3_S4",
+        "isTerminatingState": true
+    },
+    "S0_S1_S2_S3_S4": {
+        "0": "S0_S1_S2_S3",
+        "1": "S0_S1_S2_S3_S4",
+        "isTerminatingState": true
+    }
+}
