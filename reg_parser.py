@@ -66,8 +66,11 @@ class Preprocessor:
             ret+=text[i]
             square_brackets += (text[i] == '[')
             square_brackets -= (text[i] == ']')
+            if square_brackets>0:
+                i+=1
+                continue
             if not(text[i] in binary_operators or text[i] in opening_brackets or text[i+1] in binary_operators or text[i+1] in closing_brackets or text[i+1] in unary_operators):
-                ret+='&' if square_brackets ==0 else '|'
+                ret+='&'
             i+=1
         ret+=text[sz-1]
         return ret
@@ -111,14 +114,15 @@ class FA:
         self.end = operands[1].end
         operands[0].end.transitions.append(Transition("eps",operands[1].start))
 
-    def add_minus_FA(self, operands: list[str], states: list[State]):
+    def add_minus_FA(self, ranges: list[list[str]], states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
         states.append(self.end)
-        for i in range(ord(operands[0]),ord(operands[1])+1):
-            transition = Transition(chr(i), self.end)
-            self.start.transitions.append(transition)
+        for operands in ranges:
+            for i in range(ord(operands[0]),ord(operands[1])+1):
+                transition = Transition(chr(i), self.end)
+                self.start.transitions.append(transition)
     
     def add_asterisk_FA(self, operand: "FA", states: list[State]):
         self.start = State()
@@ -153,7 +157,9 @@ class FA:
 class RegParser:
     def __init__(self, text):
         self.text = Preprocessor.preprocess(text)
+        print(self.text)
         self.build()
+        print(self.q)
         self.states: list[State] = []
     
     def build(self):
@@ -163,7 +169,7 @@ class RegParser:
         sz = len(text)
         for i in range(sz):
             # case 1: alphabet, digit, dot
-            if text[i].isalpha() or text[i].isdigit() or text[i]=='.':
+            if text[i].isalpha() or text[i].isdigit() or text[i]=='.' or text[i]=='-':
                 q.append(text[i])
             # case 2: operators
             elif Operator.precedence(text[i]) is not None:
@@ -181,6 +187,14 @@ class RegParser:
                 if len(st)==0:
                     raise Exception("Invalid Regular Expression")
                 st.pop()
+        i = 0
+        while i<len(q):
+            if q[i] == '-':
+                # swap the - with the next operand
+                q[i],q[i+1] = q[i+1],q[i]
+                i+=2
+            else:
+                i+=1
         while(len(st)>0):
             if(st[-1] in opening_brackets):
                 raise Exception("Invalid Regular Expression")
@@ -196,7 +210,8 @@ class RegParser:
     def parse(self):
         sz = len(self.q)
         st : list[FA] = []
-        for i in range(sz):
+        i = 0
+        while i < sz:
             fa = FA()
             if not RegParser.is_operand(self.q[i]):
                 if self.q[i] == '|':
@@ -207,11 +222,6 @@ class RegParser:
                     fa.add_and_FA([st[-2],st[-1]],self.states)
                     st.pop()
                     st.pop()
-                elif self.q[i] == '-':
-                    fa.add_minus_FA([self.q[i-2],self.q[i-1]],self.states)
-                    st.pop()
-                    st.pop()
-                    State.count -= 2
                 elif self.q[i] == '*':
                     fa.add_asterisk_FA(st[-1],self.states)
                     st.pop()
@@ -220,8 +230,20 @@ class RegParser:
                 elif self.q[i] == '?':
                     fa.add_question_mark_FA(st[-1],self.states)
             else:
-                fa.add_operand_FA(self.q[i],self.states)
+                # - operator lookahead
+                ranges = []
+                flag = False
+                while i+2<sz and self.q[i+2] == '-' and RegParser.is_operand(self.q[i+1]):
+                    ranges.append([self.q[i],self.q[i+1]])
+                    i+=3
+                    flag = True
+                if flag:
+                    fa.add_minus_FA(ranges,self.states)
+                    i-=1
+                else:
+                    fa.add_operand_FA(self.q[i],self.states)
             st.append(fa)
+            i+=1
         st[-1].end.is_terminating = True
         ret = {
             "startingState": f'S{st[-1].start.id}',
@@ -238,7 +260,7 @@ if __name__ == '__main__':
     # text = Preprocessor.preprocess("[a-zA-Z]")
     # text = Preprocessor.preprocess("a(b?|c)")
     # parser = RegParser("[a-zA-Z]").parse()
-    parser = RegParser("(a|b)*abb")
+    parser = RegParser("a*b(f|r)[a-cA-Z1-9]")
     ans = parser.parse()
     print(ans)
     # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()
