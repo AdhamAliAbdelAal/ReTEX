@@ -19,9 +19,22 @@ class Operator:
         
 
 class State:
+    count = 0
     def __init__(self, is_accepting: bool = False, transitions: list["Transition"] = []):
         self.is_terminating = is_accepting
-        self.transitions = transitions
+        self.transitions: list[Transition] = transitions
+        self.id = State.count
+        State.count += 1
+    def to_json(self):
+        transitions_dict = {}
+        for t in self.transitions:
+            transitions_dict[t.input] = f'S{t.to.id}'
+        return {
+            f'S{self.id}':{
+                "isTerminatingState": self.is_terminating,
+                **transitions_dict
+            }
+        }
 
     
 class Transition:
@@ -75,7 +88,7 @@ class FA:
             transition = Transition(operand, self.end)
             self.start.transitions.append(transition)
     
-    def add_or_FA(self, operator: str,operands: list["FA"], states: list[State]):
+    def add_or_FA(self, operands: list["FA"], states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
@@ -85,12 +98,12 @@ class FA:
         operands[0].end.transitions.append(Transition("eps",self.end))
         operands[1].end.transitions.append(Transition("eps",self.end))
     
-    def add_and_FA(self, operator: str,operands: list["FA"], states: list[State]):
+    def add_and_FA(self, operands: list["FA"], states: list[State]):
         self.start = operands[0].start
         self.end = operands[1].end
         operands[0].end.transitions.append(Transition("eps",operands[1].start))
 
-    def add_minus_FA(self, operator: str,operands: list[str], states: list[State]):
+    def add_minus_FA(self, operands: list[str], states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
@@ -99,7 +112,7 @@ class FA:
             transition = Transition(chr(i), self.end)
             self.start.transitions.append(transition)
     
-    def add_asterisk_FA(self, operator: str,operand: "FA", states: list[State]):
+    def add_asterisk_FA(self, operand: "FA", states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
@@ -109,7 +122,7 @@ class FA:
         operand.end.transitions.append(Transition("eps",self.end))
         operand.end.transitions.append(Transition("eps",self.start))
 
-    def add_plus_FA(self, operator: str,operand: "FA", states: list[State]):
+    def add_plus_FA(self, operand: "FA", states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
@@ -118,7 +131,7 @@ class FA:
         operand.end.transitions.append(Transition("eps",self.end))
         operand.end.transitions.append(Transition("eps",self.start))
 
-    def add_question_mark_FA(self, operator: str,operand: "FA", states: list[State]):
+    def add_question_mark_FA(self, operand: "FA", states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
@@ -133,7 +146,7 @@ class RegParser:
     def __init__(self, text):
         self.text = Preprocessor.preprocess(text)
         self.build()
-        self.states = []
+        self.states: list[State] = []
     
     def build(self):
         q = []
@@ -174,22 +187,41 @@ class RegParser:
         
     def parse(self):
         sz = len(self.q)
+        st : list[FA] = []
         for i in range(sz):
+            fa = FA()
             if not RegParser.is_operand(self.q[i]):
                 if self.q[i] == '|':
-                    pass
+                    fa.add_or_FA([st[-2],st[-1]],self.states)
+                    st.pop()
+                    st.pop()
                 elif self.q[i] == '&':
-                    pass
+                    fa.add_and_FA([st[-2],st[-1]],self.states)
+                    st.pop()
+                    st.pop()
                 elif self.q[i] == '-':
-                    pass
+                    fa.add_minus_FA([self.q[i-2],self.q[i-1]],self.states)
+                    st.pop()
+                    st.pop()
+                    State.count -= 2
                 elif self.q[i] == '*':
-                    pass
+                    fa.add_asterisk_FA(st[-1],self.states)
+                    st.pop()
                 elif self.q[i] == '+':
-                    pass
+                    fa.add_plus_FA(st[-1],self.states)
                 elif self.q[i] == '?':
-                    pass
-                else:
-                    pass
+                    fa.add_question_mark_FA(st[-1],self.states)
+            else:
+                fa.add_operand_FA(self.q[i],self.states)
+            st.append(fa)
+        st[-1].end.is_terminating = True
+        for state in self.states:
+            print(state.to_json())
+        return {
+            "startingState": f'S{st[-1].start.id}',
+            # "states": {state.to_json() for state in self.states}
+        }
+        
 
 
 
@@ -199,7 +231,8 @@ if __name__ == '__main__':
     # text = Preprocessor.preprocess("[a-zA-Z]")
     # text = Preprocessor.preprocess("a(b?|c)")
     # parser = RegParser("[a-zA-Z]").parse()
-    parser = RegParser("a(b?|c)").parse()
+    parser = RegParser("(a|b)*abb")
+    print(parser.parse())
     # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()
     
     
