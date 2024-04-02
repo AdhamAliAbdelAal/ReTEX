@@ -1,5 +1,3 @@
-from queue import Queue
-
 class Operator:
     @staticmethod
     def precedence(op):
@@ -20,11 +18,8 @@ class Operator:
             return None
         
 
-class Transition:
-    pass
-
 class State:
-    def __init__(self, is_accepting: bool = False, transitions: list[Transition] = []):
+    def __init__(self, is_accepting: bool = False, transitions: list["Transition"] = []):
         self.is_terminating = is_accepting
         self.transitions = transitions
 
@@ -64,6 +59,8 @@ class FA:
     def add_operand_FA(self, operand: str ,states: list[State]):
         self.start = State()
         self.end = State()
+        states.append(self.start)
+        states.append(self.end)
         if operand == '.':
             # for all digits and alphabets
             for i in range(26):
@@ -78,20 +75,60 @@ class FA:
             transition = Transition(operand, self.end)
             self.start.transitions.append(transition)
     
-    def add_operator_FA(self, operator: str, states: list[State]):
-        if operator == '|':
-            pass
-        elif operator == '&':
-            pass
-        elif operator == '-':
-            pass
-        elif operator == '*':
-            pass
-        elif operator == '+':
-            pass
-        elif operator == '?':
-            pass
+    def add_or_FA(self, operator: str,operands: list["FA"], states: list[State]):
+        self.start = State()
+        self.end = State()
+        states.append(self.start)
+        states.append(self.end)
+        self.start.transitions.append(Transition("eps",operands[0].start))
+        self.start.transitions.append(Transition("eps",operands[1].start))
+        operands[0].end.transitions.append(Transition("eps",self.end))
+        operands[1].end.transitions.append(Transition("eps",self.end))
+    
+    def add_and_FA(self, operator: str,operands: list["FA"], states: list[State]):
+        self.start = operands[0].start
+        self.end = operands[1].end
+        operands[0].end.transitions.append(Transition("eps",operands[1].start))
 
+    def add_minus_FA(self, operator: str,operands: list[str], states: list[State]):
+        self.start = State()
+        self.end = State()
+        states.append(self.start)
+        states.append(self.end)
+        for i in range(ord(operands[0]),ord(operands[1])+1):
+            transition = Transition(chr(i), self.end)
+            self.start.transitions.append(transition)
+    
+    def add_asterisk_FA(self, operator: str,operand: "FA", states: list[State]):
+        self.start = State()
+        self.end = State()
+        states.append(self.start)
+        states.append(self.end)
+        self.start.transitions.append(Transition("eps",self.end))
+        self.start.transitions.append(Transition("eps",operand.start))
+        operand.end.transitions.append(Transition("eps",self.end))
+        operand.end.transitions.append(Transition("eps",self.start))
+
+    def add_plus_FA(self, operator: str,operand: "FA", states: list[State]):
+        self.start = State()
+        self.end = State()
+        states.append(self.start)
+        states.append(self.end)
+        self.start.transitions.append(Transition("eps",operand.start))
+        operand.end.transitions.append(Transition("eps",self.end))
+        operand.end.transitions.append(Transition("eps",self.start))
+
+    def add_question_mark_FA(self, operator: str,operand: "FA", states: list[State]):
+        self.start = State()
+        self.end = State()
+        states.append(self.start)
+        states.append(self.end)
+        self.start.transitions.append(Transition("eps",self.end))
+        self.start.transitions.append(Transition("eps",operand.start))
+        operand.end.transitions.append(Transition("eps",self.end))
+    
+
+    
 class RegParser:
     def __init__(self, text):
         self.text = Preprocessor.preprocess(text)
