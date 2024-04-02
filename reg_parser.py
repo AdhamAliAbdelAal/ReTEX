@@ -1,3 +1,4 @@
+import json
 class Operator:
     @staticmethod
     def precedence(op):
@@ -28,7 +29,14 @@ class State:
     def to_json(self):
         transitions_dict = {}
         for t in self.transitions:
-            transitions_dict[t.input] = f'S{t.to.id}'
+            if t.input in transitions_dict:
+                if type(transitions_dict[t.input]) == list:
+                    transitions_dict[t.input].append(f'S{t.to.id}')
+                else:
+                    transitions_dict[t.input] = [transitions_dict[t.input],f'S{t.to.id}']
+            else:
+                transitions_dict[t.input] = f'S{t.to.id}'
+        
         return {
             f'S{self.id}':{
                 "isTerminatingState": self.is_terminating,
@@ -215,13 +223,12 @@ class RegParser:
                 fa.add_operand_FA(self.q[i],self.states)
             st.append(fa)
         st[-1].end.is_terminating = True
-        for state in self.states:
-            print(state.to_json())
-        return {
+        ret = {
             "startingState": f'S{st[-1].start.id}',
-            # "states": {state.to_json() for state in self.states}
         }
-        
+        for s in self.states:
+            ret.update(s.to_json())
+        return ret
 
 
 
@@ -232,7 +239,10 @@ if __name__ == '__main__':
     # text = Preprocessor.preprocess("a(b?|c)")
     # parser = RegParser("[a-zA-Z]").parse()
     parser = RegParser("(a|b)*abb")
-    print(parser.parse())
+    ans = parser.parse()
+    print(ans)
     # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()
+    with open("output.json","w") as f:
+        f.write(json.dumps(ans,indent=4))
     
     
