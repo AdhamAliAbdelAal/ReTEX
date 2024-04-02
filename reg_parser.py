@@ -22,7 +22,7 @@ class State:
     count = 0
     def __init__(self, is_accepting: bool = False, transitions: list["Transition"] = []):
         self.is_terminating = is_accepting
-        self.transitions: list[Transition] = transitions
+        self.transitions: list[Transition] = []
         self.id = State.count
         State.count += 1
     def to_json(self):
