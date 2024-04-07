@@ -81,21 +81,21 @@ class AutomataMachine:
         self.states[state].transitions[input].append(next_state)
 
     #
-# {
-#   "startingState": "S0",
-#   "S0": {
-#     "isTerminatingState": true,
-#     "0": "S0",
-#     "1": "S1"  ,
-#     "eps": ["S1"]
-# },
-#   "S1": {
-#     "isTerminatingState": false,
-#     "0": "S2",
-#     "1" : "S4"  ,
-#     "eps": ["S0"]
-#   }
-# }
+    # {
+    #   "startingState": "S0",
+    #   "S0": {
+    #     "isTerminatingState": true,
+    #     "0": "S0",
+    #     "1": "S1"  ,
+    #     "eps": ["S1"]
+    # },
+    #   "S1": {
+    #     "isTerminatingState": false,
+    #     "0": "S2",
+    #     "1" : "S4"  ,
+    #     "eps": ["S0"]
+    #   }
+    # }
     def save_to_json(self, file):
         with open(file, 'w') as f:
             data = {'startingState': self.starting_state}
@@ -338,6 +338,7 @@ if __name__ == "__main__":
     # print(state_machine.get_next_state('S0', '1'))
     # print(state_machine.get_starting_state())
     state_machine.draw()
+    
     dfa_gen = dfa_generator('r1.json')
     # aa = dfa.get_closure(dfa.nfa_sm.get_state('S2'))
     new_dfa = dfa_gen.convert_to_dfa()
