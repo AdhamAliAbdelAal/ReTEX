@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # text = Preprocessor.preprocess("[a-zA-Z]")
     # text = Preprocessor.preprocess("a(b?|c)")
     # parser = RegParser("[a-zA-Z]").parse()
-    parser = RegParser("a*b(f|r)[a-cA-Z1-9]")
+    parser = RegParser("abc[a-cA-Z1-9]")
     ans = parser.parse()
     print(ans)
     # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()
