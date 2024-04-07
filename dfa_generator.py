@@ -113,7 +113,7 @@ class AutomataMachine:
         for state in self.states.values():
             # https://stackoverflow.com/questions/74082881/adding-icon-for-node-shape-using-networkx-and-pyvis-python
             G.add_node(
-                state.id, color='gray' if not state.id == self.starting_state else 'orange', shape='diamond' if state.is_terminating_state else 'circle'
+                state.id, color='gray' if not state.id == self.starting_state else 'orange', shape='diamond' if state.is_terminating_state else 'circle', size=10, font={'size': 8}
             )
 
             # merge common edges like if 2 edges like (s1,s2,"a") and (s1,s2,"b") are present, merge them to (s1,s2,"a,b")
@@ -132,7 +132,7 @@ class AutomataMachine:
                     v), color='gray' if k[1] != EPS else 'red')
 
         nt = net.Network(notebook=True, cdn_resources='remote', directed=True)
-        # nt.show_buttons(filter_=['physics'])
+        nt.show_buttons(filter_=['physics'])
         nt.set_edge_smooth('dynamic')
         nt.from_nx(G)
         nt.repulsion(spring_strength=0.02)
@@ -286,7 +286,7 @@ class DFA_Minimizer:
                     transitions = self.dfa.states[state].transitions
 
                     state_transitions_to_go_groups = tuple(
-                        sorted([(k, self.get_group(v[0])) for k, v in transitions.items()]))
+                        sorted([(k, self.get_group(v[0])) for k, v in transitions.items()]))  # this is like (a, 0), (b, 1) etc (input, group_id)
                     if state_transitions_to_go_groups not in subgroups.keys():
                         subgroups[state_transitions_to_go_groups] = set()
 
