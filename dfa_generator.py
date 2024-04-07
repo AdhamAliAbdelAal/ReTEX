@@ -331,15 +331,15 @@ class DFA_Minimizer:
 
 
 if __name__ == "__main__":
-    state_machine = AutomataMachine().init_from_file('r1.json')
+    state_machine = AutomataMachine().init_from_file('output.json')
     # print(state_machine.get_state('S1').transitions)
     # print(state_machine.is_terminating_state('S0'))
     # print(state_machine.get_next_state('S0', '1a'))
     # print(state_machine.get_next_state('S0', '1'))
     # print(state_machine.get_starting_state())
     state_machine.draw()
-    
-    dfa_gen = dfa_generator('r1.json')
+
+    dfa_gen = dfa_generator('output.json')
     # aa = dfa.get_closure(dfa.nfa_sm.get_state('S2'))
     new_dfa = dfa_gen.convert_to_dfa()
     new_dfa.draw()

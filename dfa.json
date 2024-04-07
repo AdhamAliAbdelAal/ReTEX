@@ -1,28 +1,11 @@
 {
-    "startingState": "S0_S2_S4_S6_S7_S8",
-    "S0_S2_S4_S6_S7_S8": {
-        "a": "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9",
-        "b": "S0_S2_S3_S4_S5_S6_S7_S8",
+    "startingState": "S2",
+    "S2": {
+        "c": "S2_S3_S4_S5",
         "isTerminatingState": false
     },
-    "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9": {
-        "a": "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9",
-        "b": "S0_S11_S12_S2_S3_S4_S5_S6_S7_S8",
-        "isTerminatingState": false
-    },
-    "S0_S2_S3_S4_S5_S6_S7_S8": {
-        "a": "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9",
-        "b": "S0_S2_S3_S4_S5_S6_S7_S8",
-        "isTerminatingState": false
-    },
-    "S0_S11_S12_S2_S3_S4_S5_S6_S7_S8": {
-        "a": "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9",
-        "b": "S0_S13_S2_S3_S4_S5_S6_S7_S8",
-        "isTerminatingState": false
-    },
-    "S0_S13_S2_S3_S4_S5_S6_S7_S8": {
-        "a": "S0_S1_S10_S2_S4_S5_S6_S7_S8_S9",
-        "b": "S0_S2_S3_S4_S5_S6_S7_S8",
+    "S2_S3_S4_S5": {
+        "c": "S2_S3_S4_S5",
         "isTerminatingState": true
     }
 }
