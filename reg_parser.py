@@ -235,8 +235,10 @@ class RegParser:
                     st.pop()
                 elif self.q[i] == '+':
                     fa.add_plus_FA(st[-1], self.states)
+                    st.pop()
                 elif self.q[i] == '?':
                     fa.add_question_mark_FA(st[-1], self.states)
+                    st.pop()
             else:
                 # - operator lookahead
                 ranges = []
