@@ -173,7 +173,13 @@ test_cases = [
     # Empty Regular Expression
     {"input": "", "expected_output": False},
 
-    {"input": "(a-b)", "expected_output": False}
+    {"input": "(a-b)", "expected_output": False},
+    {"input": "[a-|b]", "expected_output": False},
+    {"input": "[a|b]", "expected_output": False},
+    {"input": "[a-bb]*", "expected_output": True},
+    {"input": "a*b+(v|8378[1-6A])", "expected_output": True},
+    {"input": "a*b+(v|8378[[1-2]])", "expected_output": False},
+    {"input": "a*b*c+whgdgsg727|ueb(sghdgh|udje3873)", "expected_output": True},
 
 ]
 

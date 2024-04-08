@@ -58,8 +58,8 @@ class Transition:
 
 unary_operators = ['*', '+', '?']
 binary_operators = ['|', '&', '-']
-opening_brackets = ['(', '[']
-closing_brackets = [')', ']']
+opening_brackets = ['(']
+closing_brackets = [')']
 
 
 class Preprocessor:
@@ -73,10 +73,7 @@ class Preprocessor:
             ret += text[i]
             square_brackets += (text[i] == '[')
             square_brackets -= (text[i] == ']')
-            if square_brackets > 0:
-                i += 1
-                continue
-            if not (text[i] in binary_operators or text[i] in opening_brackets or text[i+1] in binary_operators or text[i+1] in closing_brackets or text[i+1] in unary_operators):
+            if square_brackets==0 and not (text[i] in binary_operators or text[i] in opening_brackets or text[i+1] in binary_operators or text[i+1] in closing_brackets or text[i+1] in unary_operators):
                 ret += '&'
             i += 1
         ret += text[sz-1]
@@ -123,14 +120,18 @@ class FA:
         operands[0].end.transitions.append(
             Transition("eps", operands[1].start))
 
-    def add_minus_FA(self, ranges: list[list[str]], states: list[State]):
+    def add_square_bracket_FA(self, ranges: list[list[str]], states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
         states.append(self.end)
         for operands in ranges:
-            for i in range(ord(operands[0]), ord(operands[1])+1):
-                transition = Transition(chr(i), self.end)
+            if len(operands) == 2:
+                for i in range(ord(operands[0]), ord(operands[1])+1):
+                    transition = Transition(chr(i), self.end)
+                    self.start.transitions.append(transition)
+            else:
+                transition = Transition(operands[0], self.end)
                 self.start.transitions.append(transition)
 
     def add_asterisk_FA(self, operand: "FA", states: list[State]):
@@ -175,7 +176,8 @@ class RegParser:
         text = self.text
         st = []
         sz = len(text)
-        for i in range(sz):
+        i = 0
+        while i<sz:
             # case 1: alphabet, digit, dot
             if text[i].isalpha() or text[i].isdigit() or text[i] == '.' or text[i] == '-':
                 q.append(text[i])
@@ -189,20 +191,18 @@ class RegParser:
                 st.append(text[i])
             # case 4: closing brackets
             elif text[i] in closing_brackets:
-                opening = '(' if text[i] == ')' else '['
+                opening = '('
                 while len(st) > 0 and st[-1] != opening:
                     q.append(st.pop())
                 if len(st) == 0:
                     raise Exception("Invalid Regular Expression")
                 st.pop()
-        i = 0
-        while i < len(q):
-            if q[i] == '-':
-                # swap the - with the next operand
-                q[i], q[i+1] = q[i+1], q[i]
-                i += 2
-            else:
-                i += 1
+            elif text[i] == '[':
+                while i<sz and text[i] != ']':
+                    q.append(text[i])
+                    i += 1
+                q.append(text[i])
+            i+=1
         while (len(st) > 0):
             if (st[-1] in opening_brackets):
                 raise Exception("Invalid Regular Expression")
@@ -239,19 +239,24 @@ class RegParser:
                 elif self.q[i] == '?':
                     fa.add_question_mark_FA(st[-1], self.states)
                     st.pop()
+                elif self.q[i] == '[':
+                    i+=1
+                    substr = ''
+                    while i<sz and self.q[i] != ']':
+                        substr += self.q[i]
+                        i += 1
+                    ranges = []
+                    j = 0
+                    while j < len(substr):
+                        if j+2 < len(substr) and substr[j+1] == '-':
+                            ranges.append([substr[j], substr[j+2]])
+                            j += 3
+                        else:
+                            ranges.append([substr[j]])
+                            j += 1
+                    fa.add_square_bracket_FA(ranges, self.states)
             else:
-                # - operator lookahead
-                ranges = []
-                flag = False
-                while i+2 < sz and self.q[i+2] == '-' and RegParser.is_operand(self.q[i+1]):
-                    ranges.append([self.q[i], self.q[i+1]])
-                    i += 3
-                    flag = True
-                if flag:
-                    fa.add_minus_FA(ranges, self.states)
-                    i -= 1
-                else:
-                    fa.add_operand_FA(self.q[i], self.states)
+                fa.add_operand_FA(self.q[i], self.states)
             st.append(fa)
             i += 1
         st[-1].end.is_terminating = True
@@ -268,7 +273,7 @@ if __name__ == '__main__':
     # text = Preprocessor.preprocess("[a-zA-Z]")
     # text = Preprocessor.preprocess("a(b?|c)")
     # parser = RegParser("[a-zA-Z]").parse()
-    parser = RegParser("ab?")
+    parser = RegParser("a[0b-c1-5i]")
     ans = parser.parse()
     print(ans)
     # parser = RegParser("a((b?|c)(2*u))d*[a-zA-C]").parse()

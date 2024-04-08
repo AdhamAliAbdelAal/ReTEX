@@ -6,24 +6,21 @@
     },
     "S1": {
         "isTerminatingState": false,
-        "eps": "S4"
+        "eps": "S2"
     },
     "S2": {
         "isTerminatingState": false,
-        "b": "S3"
+        "0": "S3",
+        "b": "S3",
+        "c": "S3",
+        "1": "S3",
+        "2": "S3",
+        "3": "S3",
+        "4": "S3",
+        "5": "S3",
+        "i": "S3"
     },
     "S3": {
-        "isTerminatingState": false,
-        "eps": "S5"
-    },
-    "S4": {
-        "isTerminatingState": false,
-        "eps": [
-            "S5",
-            "S2"
-        ]
-    },
-    "S5": {
         "isTerminatingState": true
     }
 }
