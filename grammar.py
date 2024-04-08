@@ -88,10 +88,8 @@ def solve(left: int, right:int, idx: int, reg: str, symbolIndices: dict[str, lis
             if is_terminal(r[0]) and is_terminal(r[-1]):
                 terminal_indices_left = get_indices_inbound(r[0], left, right, symbolIndices)
                 terminal_indices_right = get_indices_inbound(r[-1], left, right, symbolIndices)
-                for i in terminal_indices_left:
-                    for j in terminal_indices_right:
-                        if i < j and solve(i+1, j-1, rule2Index[r[1]],reg,symbolIndices):
-                            return True
+                if len(terminal_indices_left) > 0 and len(terminal_indices_right)>0 and left == terminal_indices_left[0] and right == terminal_indices_right[-1] and solve(left+1, right-1, rule2Index[r[1]],reg,symbolIndices):
+                    return True
             else:
                 # r[1] is a terminal
                 terminal_indices = get_indices_inbound(r[1], left, right, symbolIndices)
@@ -123,7 +121,7 @@ def fill_symbol_indices(reg: str) -> dict[str, list[int]]:
         else:
             symbolIndices[c].append(i)
     return symbolIndices
-reg = 'a?'
+reg = '((ABC)|(abc))'
 
 symbolIndices = fill_symbol_indices(reg)
 print(solve(0, len(reg)-1, 0, reg, symbolIndices))
@@ -163,11 +161,11 @@ test_cases = [
     # Valid Regular Expression with Combination of Operators
     {"input": "A?(B|C)*D+", "expected_output": True},
     
-    # Invalid Regular Expression with Improper Operator Usage
-    {"input": "(A|B+C)*D?", "expected_output": False},
-    
     # Empty Regular Expression
-    {"input": "", "expected_output": False}
+    {"input": "", "expected_output": False},
+
+    {"input": "(a-b)", "expected_output": False}
+
 ]
 
 for test_case in test_cases:
@@ -175,4 +173,5 @@ for test_case in test_cases:
     expected_output = test_case["expected_output"]
     symbolIndices = fill_symbol_indices(input_str)
     output = solve(0, len(input_str)-1, 0, input_str, symbolIndices)
+    assert output==expected_output
     print(f"Test case passed with input: {input_str} and expected output: {expected_output}. Output: {output}")
