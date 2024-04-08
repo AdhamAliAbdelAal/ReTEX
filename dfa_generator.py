@@ -4,7 +4,9 @@ from collections import deque
 from matplotlib import pyplot as plt
 import pyvis.network as net
 import networkx as nx
-
+# graphvis
+# https://graphviz.org/download
+from graphviz import Digraph
 EPS = 'eps'
 
 
@@ -138,6 +140,9 @@ class AutomataMachine:
         nt.repulsion(spring_strength=0.02)
         nt.toggle_physics(True)
         nt.show(f'{self.name}_FSM.html')
+
+        # write dot file to use with graphviz
+        # nx.write_dot(G, f'{self.name}_FSM.dot')
 
         # draw using nx instead
         # pos = nx.planar_layout(g)

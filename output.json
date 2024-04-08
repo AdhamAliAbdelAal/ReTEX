@@ -15,13 +15,15 @@
         "isTerminatingState": false,
         "eps": [
             "S5",
-            "S4",
             "S4"
         ]
     },
     "S4": {
         "isTerminatingState": false,
-        "eps": "S2"
+        "eps": [
+            "S5",
+            "S2"
+        ]
     },
     "S5": {
         "isTerminatingState": true
