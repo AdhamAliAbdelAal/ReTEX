@@ -290,8 +290,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "orange", "font": {"size": 8}, "id": "S0", "label": "S0", "shape": "circle", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": "S1_S2_S4_S5", "label": "S1_S2_S4_S5", "shape": "diamond", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": "S3_S5", "label": "S3_S5", "shape": "diamond", "size": 10}]);
-                  edges = new vis.DataSet([{"arrows": "to", "color": "gray", "from": "S0", "label": "a", "to": "S1_S2_S4_S5", "width": 1}, {"arrows": "to", "color": "gray", "from": "S1_S2_S4_S5", "label": "b", "to": "S3_S5", "width": 1}]);
+                  nodes = new vis.DataSet([{"color": "orange", "font": {"size": 8}, "id": "S0", "label": "S0", "shape": "circle", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": "S1_S2_S4_S5", "label": "S1_S2_S4_S5", "shape": "diamond", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": "S2_S3_S4_S5", "label": "S2_S3_S4_S5", "shape": "diamond", "size": 10}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "gray", "from": "S0", "label": "a", "to": "S1_S2_S4_S5", "width": 1}, {"arrows": "to", "color": "gray", "from": "S1_S2_S4_S5", "label": "b", "to": "S2_S3_S4_S5", "width": 1}, {"arrows": "to", "color": "gray", "from": "S2_S3_S4_S5", "label": "b", "to": "S2_S3_S4_S5", "width": 1}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });

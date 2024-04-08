@@ -5,10 +5,11 @@
         "isTerminatingState": false
     },
     "S1_S2_S4_S5": {
-        "b": "S3_S5",
+        "b": "S2_S3_S4_S5",
         "isTerminatingState": true
     },
-    "S3_S5": {
+    "S2_S3_S4_S5": {
+        "b": "S2_S3_S4_S5",
         "isTerminatingState": true
     }
 }
