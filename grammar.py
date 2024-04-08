@@ -51,8 +51,6 @@ rule2Index = {
 }
 index2Rule = {v: k for k, v in rule2Index.items()}
 print(rule2Index)
-N=100
-mem = [[[-1 for _ in range(N)] for _ in range(N)] for _ in range(N)]
 
 
 def is_terminal(c: str) -> bool:
@@ -71,46 +69,55 @@ def get_indices_inbound(c: str, l: int, r: int, symbolIndices: dict[str, list[in
         return []
     return [i for i in symbolIndices[c] if l <= i <= r]
 
-def solve(left: int, right:int, idx: int, reg: str, symbolIndices: dict[str, list[int]]) -> bool:
+def solve(left: int, right:int, idx: int, reg: str, symbolIndices: dict[str, list[int]], mem) -> bool:
+    if mem[left][right][idx] != -1:
+        return mem[left][right][idx]
     if left > right:
-        return False
+        mem[left][right][idx] = False
+        return mem[left][right][idx]
     rule = index2Rule[idx]
     for r in rules[rule]:
         # case1 r contains terminals only
         # base case
         if all_terminals(r):
-            if len(r) != right-left+1:
-                return False
             if reg[left:right+1] == ''.join(r):
-                return True
+                mem[left][right][idx]= True
+                return mem[left][right][idx]
         # case2 r contains terminals
         elif contains_terminals(r):
+            # brackets
             if is_terminal(r[0]) and is_terminal(r[-1]):
                 terminal_indices_left = get_indices_inbound(r[0], left, right, symbolIndices)
                 terminal_indices_right = get_indices_inbound(r[-1], left, right, symbolIndices)
-                if len(terminal_indices_left) > 0 and len(terminal_indices_right)>0 and left == terminal_indices_left[0] and right == terminal_indices_right[-1] and solve(left+1, right-1, rule2Index[r[1]],reg,symbolIndices):
-                    return True
+                if len(terminal_indices_left) > 0 and len(terminal_indices_right)>0 and left == terminal_indices_left[0] and right == terminal_indices_right[-1] and solve(left+1, right-1, rule2Index[r[1]],reg,symbolIndices,mem):
+                    mem[left][right][idx]= True
+                    return mem[left][right][idx]
             else:
                 # r[1] is a terminal
                 terminal_indices = get_indices_inbound(r[1], left, right, symbolIndices)
                 for i in terminal_indices:
-                    if solve(left, i-1, rule2Index[r[0]],reg,symbolIndices):
+                    if solve(left, i-1, rule2Index[r[0]],reg,symbolIndices,mem):
                         if len(r) == 2:
                             if i == right:
-                                return True
-                        elif solve(i+1, right, rule2Index[r[2]],reg,symbolIndices):
-                            return True
+                                mem[left][right][idx]=True
+                                return mem[left][right][idx]
+                        elif solve(i+1, right, rule2Index[r[2]],reg,symbolIndices,mem):
+                            mem[left][right][idx]=True
+                            return mem[left][right][idx]
         # case3 r contains non-terminals only
         else:
             # match all string
             if len(r) == 1:
-                if solve(left, right, rule2Index[r[0]],reg,symbolIndices):
-                    return True
+                if solve(left, right, rule2Index[r[0]],reg,symbolIndices,mem):
+                    mem[left][right][idx] =True
+                    return mem[left][right][idx]
             else:
             # match till right-1
                 for i in range(left, right):
-                    if solve(left, i, rule2Index[r[0]],reg,symbolIndices) and solve(i+1, right, rule2Index[r[1]],reg,symbolIndices):
-                        return True
+                    if solve(left, i, rule2Index[r[0]],reg,symbolIndices,mem) and solve(i+1, right, rule2Index[r[1]],reg,symbolIndices,mem):
+                        mem[left][right][idx]=True
+                        return mem[left][right][idx]
+    mem[left][right][idx]= False
     return False
 
 def fill_symbol_indices(reg: str) -> dict[str, list[int]]:
@@ -123,8 +130,10 @@ def fill_symbol_indices(reg: str) -> dict[str, list[int]]:
     return symbolIndices
 reg = '((ABC)|(abc))'
 
+N=100
+mem = [[[-1 for _ in range(N)] for _ in range(N)] for _ in range(N)]
 symbolIndices = fill_symbol_indices(reg)
-print(solve(0, len(reg)-1, 0, reg, symbolIndices))
+print(solve(0, len(reg)-1, 0, reg, symbolIndices,mem))
 
 
 test_cases = [
@@ -169,9 +178,11 @@ test_cases = [
 ]
 
 for test_case in test_cases:
+    N=100
+    mem = [[[-1 for _ in range(N)] for _ in range(N)] for _ in range(N)]
     input_str = test_case["input"]
     expected_output = test_case["expected_output"]
     symbolIndices = fill_symbol_indices(input_str)
-    output = solve(0, len(input_str)-1, 0, input_str, symbolIndices)
+    output = solve(0, len(input_str)-1, 0, input_str, symbolIndices,mem)
     assert output==expected_output
     print(f"Test case passed with input: {input_str} and expected output: {expected_output}. Output: {output}")
