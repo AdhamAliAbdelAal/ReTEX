@@ -290,8 +290,8 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "orange", "font": {"size": 8}, "id": 0, "label": 0, "shape": "diamond", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": 1, "label": 1, "shape": "diamond", "size": 10}]);
-                  edges = new vis.DataSet([{"arrows": "to", "color": "gray", "from": 0, "label": "c,3,5,1,i,b,2,4,0", "to": 1, "width": 1}, {"arrows": "to", "color": "gray", "from": 0, "label": "a", "to": 0, "width": 1}]);
+                  nodes = new vis.DataSet([{"color": "orange", "font": {"size": 8}, "id": 0, "label": 0, "shape": "circle", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": 2, "label": 2, "shape": "diamond", "size": 10}, {"color": "gray", "font": {"size": 8}, "id": 1, "label": 1, "shape": "diamond", "size": 10}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "gray", "from": 0, "label": "k,f,p,Q,R,P,V,m,C,n,N,F,X,z,e,q,W,T,v,I,j,B,c,u,Z,M,d,s,a,H,J,i,K,w,l,D,O,b,Y,L,r,G,g,S,E,A,h,o,t,x,U,y", "to": 2, "width": 1}, {"arrows": "to", "color": "gray", "from": 2, "label": "k,f,p,Q,R,P,V,m,C,n,N,F,X,z,e,q,W,T,v,I,j,B,c,u,Z,M,d,s,a,H,J,i,K,w,l,D,O,b,Y,L,r,G,g,S,E,A,h,o,t,x,U,y", "to": 2, "width": 1}, {"arrows": "to", "color": "gray", "from": 2, "label": "8,3,7,5,9,0,1,4,2,6", "to": 1, "width": 1}, {"arrows": "to", "color": "gray", "from": 1, "label": "8,3,4,5,9,2,0,6,1,7", "to": 1, "width": 1}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
