@@ -1,4 +1,4 @@
-output.json
 *.html
 *.json
 out_imgs
+.vscode
