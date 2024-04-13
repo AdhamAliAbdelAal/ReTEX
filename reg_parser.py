@@ -245,19 +245,13 @@ class FA:
         operands[0].end.transitions.append(
             Transition("eps", operands[1].start))
 
-    def add_square_bracket_FA(self, ranges: list[list[str]], states: list[State]):
+    def add_square_bracket_FA(self, block: str, states: list[State]):
         self.start = State()
         self.end = State()
         states.append(self.start)
         states.append(self.end)
-        for operands in ranges:
-            if len(operands) == 2:
-                for i in range(ord(operands[0]), ord(operands[1])+1):
-                    transition = Transition(chr(i), self.end)
-                    self.start.transitions.append(transition)
-            else:
-                transition = Transition(operands[0], self.end)
-                self.start.transitions.append(transition)
+        transition = Transition(block, self.end)
+        self.start.transitions.append(transition)
 
     def add_asterisk_FA(self, operand: "FA", states: list[State]):
         self.start = State()
@@ -368,20 +362,12 @@ class RegParser:
                     st.pop()
                 elif self.q[i] == '[':
                     i+=1
-                    substr = ''
+                    substr = '['
                     while i<sz and self.q[i] != ']':
                         substr += self.q[i]
                         i += 1
-                    ranges = []
-                    j = 0
-                    while j < len(substr):
-                        if j+2 < len(substr) and substr[j+1] == '-':
-                            ranges.append([substr[j], substr[j+2]])
-                            j += 3
-                        else:
-                            ranges.append([substr[j]])
-                            j += 1
-                    fa.add_square_bracket_FA(ranges, self.states)
+                    substr += self.q[i]
+                    fa.add_square_bracket_FA(substr, self.states)
             else:
                 fa.add_operand_FA(self.q[i], self.states)
             st.append(fa)
@@ -395,7 +381,7 @@ class RegParser:
         return ret
 
 if __name__ == '__main__':
-    parser = RegParser("[A-Za-z]+[0-9]*")
+    parser = RegParser("[a*7]")
     ans = parser.parse()
     print(ans)
     with open("output.json", "w") as f:
