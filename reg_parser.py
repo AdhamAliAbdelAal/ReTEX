@@ -215,19 +215,9 @@ class FA:
         self.end = State()
         states.append(self.start)
         states.append(self.end)
-        if operand == '.':
-            # for all digits and alphabets
-            for i in range(26):
-                if i < 10:
-                    transition = Transition(chr(ord('0')+i), self.end)
-                    self.start.transitions.append(transition)
-                transition = Transition(chr(ord('a')+i), self.end)
-                self.start.transitions.append(transition)
-                transition = Transition(chr(ord('A')+i), self.end)
-                self.start.transitions.append(transition)
-        else:
-            transition = Transition(operand, self.end)
-            self.start.transitions.append(transition)
+        transition = Transition(operand, self.end)
+        self.start.transitions.append(transition)
+            
 
     def add_or_FA(self, operands: list["FA"], states: list[State]):
         self.start = State()
